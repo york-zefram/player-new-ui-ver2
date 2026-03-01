@@ -269,7 +269,7 @@
     let isDragging = false;
     let isFileOpening = false; 
 
-    function startSequence() { loadingOverlay.style.display = 'none'; audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }).catch(err => { console.log("Play failed:", err); }); }
+    function startSequence() { loadingOverlay.style.display = 'none'; audio.play(); playIcon.innerHTML = ICON_PAUSE; }
     tapToStart.onclick = (e) => { e.stopPropagation(); startSequence(); };
     btnSelect.addEventListener('click', (e) => { e.stopPropagation(); if (isFileOpening) return; isFileOpening = true; audio.load(); fileInput.click(); setTimeout(() => { isFileOpening = false; }, 1000); });
     
@@ -313,19 +313,24 @@
     window.addEventListener('mouseup', stopTempoChange); document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
 
+    // 再生ボタン：Ver.1の極めてシンプルな方式
     document.getElementById('btn-play').onclick = () => { 
-        if (audio.paused) { audio.play().then(() => playIcon.innerHTML = ICON_PAUSE); } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } 
+        if (audio.paused) { audio.play(); playIcon.innerHTML = ICON_PAUSE; } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } 
     };
     
     function updateFrame() {
         if (audio.duration && !isDragging) {
             const currentTimePercent = (audio.currentTime / audio.duration) * 100;
-            if (currentTimePercent >= posB) { audio.currentTime = (posA / 100) * audio.duration; } 
-            else if (currentTimePercent < posA) { audio.currentTime = (posA / 100) * audio.duration; }
-            let visualPos = (audio.currentTime / audio.duration) * 100;
-            if (visualPos > posB) visualPos = posB;
-            if (visualPos < posA) visualPos = posA;
-            seek.value = visualPos;
+            // B点ループ：A点に飛ばす
+            if (currentTimePercent >= posB) { 
+                audio.currentTime = (posA / 100) * audio.duration; 
+            } 
+            // A点震え防止：A点より大幅に前（手動戻し以外）ならA点へ
+            else if (currentTimePercent < posA - 0.2) { 
+                audio.currentTime = (posA / 100) * audio.duration; 
+            }
+
+            seek.value = (audio.currentTime / audio.duration) * 100;
             document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`;
             updateSeekStyle();
         }
@@ -346,20 +351,14 @@
     document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; if (posA >= posB) posA = posB - 0.5; updateSeekStyle(); };
     document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; if (posB <= posA) posB = posA + 0.5; updateSeekStyle(); };
     
-    // 【iPhone特化修正】まず再生を試みてから時間をセットする（Ver.1の安定性に近い構成）
+    // 戻るボタン：Ver.1のロジックを優先（再生してから時間をセット）
     document.getElementById('btn-back-to-a').onclick = () => { 
         if (!audio.duration) return; 
-        audio.play().then(() => {
-            playIcon.innerHTML = ICON_PAUSE;
-            audio.currentTime = ((posA / 100) * audio.duration); 
-            seek.value = posA; 
-            updateSeekStyle(); 
-        }).catch(() => {
-            // 停止中なら移動だけ行う
-            audio.currentTime = ((posA / 100) * audio.duration); 
-            seek.value = posA; 
-            updateSeekStyle(); 
-        });
+        audio.play();
+        audio.currentTime = (posA / 100) * audio.duration; 
+        playIcon.innerHTML = ICON_PAUSE; 
+        seek.value = posA; 
+        updateSeekStyle(); 
     };
 
     function setupDraggable(el, isA) { 
