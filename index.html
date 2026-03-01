@@ -13,14 +13,8 @@
     <style>
         :root {
             --neon-blue: #00f2ff;
-            --neon-grad-start: #00f2ff; 
-            --neon-grad-mid: #b3faff;   
-            --neon-grad-end: #0077ff;   
             --neon-blue-glow: rgba(0, 242, 255, 0.7);
-            --white-glow: rgba(255, 255, 255, 0.9);
             --bg-black: #080808;
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
             --font-header: 'Michroma', sans-serif;
             --font-main: "A-OTF Gothic MB101 Pr5 R", sans-serif;
             --marker-size: 32px;
@@ -77,25 +71,15 @@
             box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;
         }
 
-        header.glass-header { 
-            background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
-            text-align: center; padding: 0 0 2px 0;
-        }
-        
+        header.glass-header { text-align: center; padding: 0 0 2px 0; }
         .app-title { 
             margin: 0; color: var(--neon-blue); font-family: var(--font-header);
             font-size: 0.85rem; letter-spacing: 1px; text-shadow: 0 0 10px var(--neon-blue-glow); 
             white-space: nowrap;
         }
 
-        .info-header { 
-            background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
-            display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 5px 0;
-        }
-        
-        .text-fields { 
-            width: 100%; height: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: hidden;
-        }
+        .info-header { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 5px 0; }
+        .text-fields { width: 100%; height: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: hidden; }
         .marquee-box { width: 100%; overflow: hidden; white-space: nowrap; text-align: center; min-height: 1.2em; }
         .marquee-inner { display: inline-block; white-space: nowrap; }
         .scrolling-content { display: inline-block; padding-right: 50px; animation: scroll-slow 15s linear infinite; }
@@ -107,7 +91,7 @@
         
         .btn-select { 
             width: 70%; height: 34px; border-radius: 17px; 
-            border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.1);
             color: #fff; font-size: 0.8rem; font-weight: bold; line-height: 1; margin-top: 5px;
         }
 
@@ -119,26 +103,23 @@
         #time-display { color: #fff; font-size: 1.4rem; font-weight: bold; }
         #ab-range-text { color: var(--neon-blue); font-size: 1.1rem; font-weight: bold; }
 
+        /* 修正：コンテナのパディングを廃止し以前のサイズ感に戻す */
         section.container-2 { 
-            background: none; border: none; box-shadow: none; backdrop-filter: none;
-            position: relative; height: 60px; display: flex; align-items: center; 
+            position: relative; height: 60px; display: flex; align-items: center; justify-content: center;
         }
         .seek-wrapper { 
             position: relative; 
-            width: 89.2%; 
+            width: 87%; /* 以前の比率付近に固定 */
             height: 6px;
             display: flex; 
             align-items: center; 
-            margin: 0 auto; 
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
-            overflow: visible; 
         }
         
         .seek-bg-layer { 
             position: absolute; 
-            top: 0;
-            bottom: 0;
+            top: 0; bottom: 0;
             background: var(--neon-blue);
             z-index: 1; 
             border-radius: 3px;
@@ -154,8 +135,6 @@
             height: 40px;
             outline: none;
             margin: 0;
-            padding: 0;
-            box-sizing: border-box;
         }
         
         input[type="range"]#main-seek::-webkit-slider-thumb { 
@@ -164,11 +143,8 @@
             width: var(--thumb-size); 
             border-radius: 50%; 
             background: #fff;
-            border: none;
             box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--neon-blue-glow); 
             cursor: pointer; 
-            position: relative; 
-            z-index: 10;
         }
 
         .marker { 
@@ -192,43 +168,22 @@
             pointer-events: auto;
         }
 
-        .container-3 { 
-            background: none; border: none; backdrop-filter: none; -webkit-backdrop-filter: none;
-            display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 80px; 
-        }
+        .container-3 { display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 80px; }
         .main-btn { 
-            color: var(--neon-blue); 
-            background: transparent !important;
+            color: var(--neon-blue); background: transparent !important;
             cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(0, 242, 255, 0.3);
         }
-        .btn-large { 
-            width: 76px; height: 76px; border-radius: 50%; 
-            border: 2px solid var(--neon-blue);
-            box-shadow: 0 0 15px var(--neon-blue-glow), inset 0 0 10px var(--neon-blue-glow);
-        }
-        .btn-small { 
-            width: 48px; height: 48px; border-radius: 50%; 
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 8px var(--neon-blue-glow);
-            opacity: 0.8;
-        }
+        .btn-large { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue-glow), inset 0 0 10px var(--neon-blue-glow); }
+        .btn-small { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue-glow); opacity: 0.8; }
         .btn-icon { font-size: 2.4rem; filter: drop-shadow(0 0 8px var(--neon-blue)); display: flex; align-items: center; justify-content: center; } 
         .btn-icon-s { font-size: 0.9rem; font-family: var(--font-header); letter-spacing: -1px; filter: drop-shadow(0 0 5px var(--neon-blue)); }
         .svg-icon { width: 1em; height: 1em; fill: currentColor; display: block; }
 
-        /* 修正：テンポエリアの上側にマージンを追加し位置を下げる */
-        .container-tempo { 
-            background: none; border: none; display: flex; flex-direction: column; gap: 20px; padding: 8px 10px; 
-            margin-top: 15px; 
-        }
+        .container-tempo { display: flex; flex-direction: column; gap: 20px; padding: 8px 10px; margin-top: 15px; }
         .tempo-controls { display: flex; justify-content: space-between; align-items: center; width: 90%; margin: 0 auto; }
-        .btn-tempo { 
-            width: 60px; height: 30px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; 
-            background: transparent !important; border: 2px solid var(--neon-blue); color: var(--neon-blue); 
-            box-shadow: 0 0 10px var(--neon-blue-glow), inset 0 0 5px var(--neon-blue-glow); text-shadow: 0 0 5px var(--neon-blue-glow); 
-        }
-        .tempo-slider-wrapper { position: relative; width: 90%; height: 10px; display: flex; align-items: center; margin: 0 auto; }
+        .btn-tempo { width: 60px; height: 30px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; background: transparent !important; border: 2px solid var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue-glow), inset 0 0 5px var(--neon-blue-glow); text-shadow: 0 0 5px var(--neon-blue-glow); }
+        .tempo-slider-wrapper { position: relative; width: 88%; height: 10px; display: flex; align-items: center; margin: 0 auto; }
         .tempo-bg-layer { position: absolute; width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; z-index: 1; }
         input[type="range"]#tempo-slider { -webkit-appearance: none; width: 100%; background: transparent; position: relative; z-index: 5; height: 50px; outline: none; }
         input[type="range"]#tempo-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px var(--neon-blue); cursor: pointer; }
@@ -297,7 +252,6 @@
 <audio id="audio"></audio>
 
 <script>
-    /* JavaScript ロジックは一切変更なし */
     const audio = document.getElementById('audio');
     const seek = document.getElementById('main-seek');
     const seekBg = document.getElementById('seek-bg');
@@ -315,52 +269,112 @@
     let posA = 0; let posB = 100;
     let isDragging = false;
     let isFileOpening = false; 
+
     function startSequence() { loadingOverlay.style.display = 'none'; audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }).catch(err => { console.log("Play failed:", err); }); }
     tapToStart.onclick = (e) => { e.stopPropagation(); startSequence(); };
     btnSelect.addEventListener('click', (e) => { e.stopPropagation(); if (isFileOpening) return; isFileOpening = true; audio.load(); fileInput.click(); setTimeout(() => { isFileOpening = false; }, 1000); });
+    
     fileInput.onchange = (e) => {
         const file = e.target.files[0]; if (!file) { isFileOpening = false; return; }
         loadingOverlay.style.display = 'flex'; loadingSpinner.style.display = 'block'; tapToStart.style.display = 'none';
-        audio.pause(); const fileUrl = URL.createObjectURL(file); audio.src = fileUrl; posA = 0; posB = 100; audio.currentTime = 0; seek.value = 0;
+        audio.pause(); playIcon.innerHTML = ICON_PLAY; const fileUrl = URL.createObjectURL(file); audio.src = fileUrl; posA = 0; posB = 100; audio.currentTime = 0; seek.value = 1.5;
         let forcedReady = setTimeout(() => { showReadyUI(); }, 500);
         function showReadyUI() { clearTimeout(forcedReady); loadingSpinner.style.display = 'none'; tapToStart.style.display = 'block';
-            setTimeout(() => { window.jsmediatags.read(file, { onSuccess: (tag) => { const t = tag.tags; document.getElementById('title-text').innerText = t.title || file.name; document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); }, onError: () => { document.getElementById('title-text').innerText = file.name; document.getElementById('artist-text').innerText = "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); } }); }, 300);
+            setTimeout(() => { window.jsmediatags.read(file, { onSuccess: (tag) => { const t = tag.tags; document.getElementById('title-text').innerText = t.title || file.name; document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); }, onError: () => { document.getElementById('title-text').innerText = file.name; document.getElementById('artist-text').innerText = "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); } }); }, 100);
         }
         audio.onloadeddata = () => { showReadyUI(); audio.onloadeddata = null; }; updateTempo(100); isFileOpening = false;
     };
+
     function checkMarquee(innerId, boxId) {
         const inner = document.getElementById(innerId); const box = document.getElementById(boxId); if (!inner || !box) return;
         inner.classList.remove('scrolling-content'); const oldClone = inner.querySelector('.marquee-clone'); if (oldClone) inner.removeChild(oldClone);
         if (inner.scrollWidth > box.clientWidth + 2) { const span = inner.querySelector('span'); const clone = span.cloneNode(true); clone.classList.add('marquee-clone'); inner.appendChild(clone); inner.classList.add('scrolling-content'); }
     }
+
     function updateSeekStyle() {
-        const wrapper = document.getElementById('seek-wrapper'); const rectWidth = wrapper.clientWidth; const usableWidth = rectWidth;
-        const xA = (posA / 100) * usableWidth; const xB = (posB / 100) * usableWidth;
-        markerA.style.left = `${xA}px`; markerB.style.left = `${xB}px`; seekBg.style.left = `${xA}px `; seekBg.style.width = `${xB - xA}px`;
+        const wrapper = document.getElementById('seek-wrapper'); const rectWidth = wrapper.clientWidth;
+        const xA = (posA / 100) * rectWidth; const xB = (posB / 100) * rectWidth;
+        markerA.style.left = `${xA}px`; markerB.style.left = `${xB}px`; seekBg.style.left = `${xA}px`; seekBg.style.width = `${xB - xA}px`;
         if (audio.duration) { document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)}▶${formatTime((posB/100)*audio.duration)}`; }
     }
+
     function formatTime(s) { if (isNaN(s)) return "00:00"; const m = Math.floor(s / 60); const scale = Math.floor(s % 60); return `${m.toString().padStart(2, '0')}:${scale.toString().padStart(2, '0')}`; }
     function updateTempo(val) { const newTempo = Math.max(50, Math.min(150, parseInt(val))); tempoSlider.value = newTempo; audio.playbackRate = newTempo / 100; }
+    
     let tempoInterval; let tempoDelay;
     function startTempoChange(delta) { updateTempo(parseInt(tempoSlider.value) + delta); tempoDelay = setTimeout(() => { tempoInterval = setInterval(() => { updateTempo(parseInt(tempoSlider.value) + delta); }, 80); }, 500); }
     function stopTempoChange() { clearTimeout(tempoDelay); clearInterval(tempoInterval); }
+
     audio.onloadedmetadata = () => { updateSeekStyle(); checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); };
+    
     const tMinus = document.getElementById('tempo-minus'); const tPlus = document.getElementById('tempo-plus');
     tMinus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(-1); }); tPlus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(1); });
     window.addEventListener('touchend', stopTempoChange); window.addEventListener('touchcancel', stopTempoChange);
     tMinus.addEventListener('mousedown', () => startTempoChange(-1)); tPlus.addEventListener('mousedown', () => startTempoChange(1));
     window.addEventListener('mouseup', stopTempoChange); document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
+
     document.getElementById('btn-play').onclick = () => { if (audio.paused) { audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }); } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } };
-    audio.ontimeupdate = () => { if (!audio.duration || isDragging) return; const currentP = (audio.currentTime / audio.duration) * 100; if (currentP < posA || currentP >= posB) { audio.currentTime = ((posA / 100) * audio.duration); } let seekVal = (audio.currentTime / audio.duration) * 100; if (seekVal < posA) seekVal = posA; if (seekVal > posB) seekVal = posB; seek.value = seekVal; document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`; updateSeekStyle(); };
-    seek.oninput = (e) => { isDragging = true; let val = parseFloat(e.target.value); if (val < posA) val = posA; if (val > posB) val = posB; e.target.value = val; audio.currentTime = (val / 100) * audio.duration; updateSeekStyle(); };
-    seek.onchange = () => { isDragging = false; };
-    document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; updateSeekStyle(); };
-    document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; updateSeekStyle(); };
+    
+    function updateFrame() {
+        if (audio.duration && !isDragging) {
+            const currentTimePercent = (audio.currentTime / audio.duration) * 100;
+            if (currentTimePercent >= posB) { audio.currentTime = (posA / 100) * audio.duration; } 
+            else if (currentTimePercent < posA) { audio.currentTime = (posA / 100) * audio.duration; }
+            let visualPos = (audio.currentTime / audio.duration) * 100;
+            if (visualPos > posB) visualPos = posB;
+            if (visualPos < posA) visualPos = posA;
+            seek.value = visualPos;
+            document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`;
+            updateSeekStyle();
+        }
+        requestAnimationFrame(updateFrame);
+    }
+    requestAnimationFrame(updateFrame);
+
+    seek.oninput = (e) => { 
+        isDragging = true; 
+        let val = parseFloat(e.target.value); 
+        if (val < posA) { val = posA; e.target.value = posA; } 
+        else if (val > posB) { val = posB; e.target.value = posB; }
+        audio.currentTime = (val / 100) * audio.duration; 
+        updateSeekStyle(); 
+    };
+    
+    seek.onchange = (e) => { isDragging = false; };
+
+    document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; if (posA >= posB) posA = posB - 0.5; updateSeekStyle(); };
+    document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; if (posB <= posA) posB = posA + 0.5; updateSeekStyle(); };
     document.getElementById('btn-back-to-a').onclick = () => { if (!audio.duration) return; audio.currentTime = ((posA / 100) * audio.duration); seek.value = posA; updateSeekStyle(); };
-    function setupDraggable(el, isA) { let dragging = false; const move = (e) => { if (!dragging) return; isDragging = true; const rect = seek.getBoundingClientRect(); const x = (e.touches ? e.touches[0].clientX : e.clientX); let val = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100)); if (isA) { posA = Math.min(val, posB - 0.5); } else { posB = Math.max(val, posA + 0.5); } updateSeekStyle(); }; const stop = () => { if (dragging) { dragging = false; setTimeout(() => { isDragging = false; }, 200); } }; el.addEventListener('mousedown', () => dragging = true); el.addEventListener('touchstart', (e) => { e.preventDefault(); dragging = true; }, {passive: false}); window.addEventListener('mousemove', move); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('mouseup', stop); window.addEventListener('touchend', stop); }
+
+    function setupDraggable(el, isA) { 
+        let dragging = false; 
+        const move = (e) => { 
+            if (!dragging) return; 
+            isDragging = true; 
+            const wrapper = document.getElementById('seek-wrapper');
+            const rect = wrapper.getBoundingClientRect(); 
+            const x = (e.touches ? e.touches[0].clientX : e.clientX); 
+            let val = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100)); 
+            const currentPosPercent = (audio.currentTime / audio.duration) * 100;
+            if (isA) { 
+                posA = Math.min(val, posB - 1); 
+                if (posA > currentPosPercent) { audio.currentTime = (posA / 100) * audio.duration; seek.value = posA; }
+            } else { 
+                posB = Math.max(val, posA + 1); 
+                if (posB < currentPosPercent) { audio.currentTime = (posB / 100) * audio.duration; seek.value = posB; }
+            } 
+            updateSeekStyle(); 
+        }; 
+        const stop = () => { if (dragging) { dragging = false; setTimeout(() => { isDragging = false; }, 200); } }; 
+        el.addEventListener('mousedown', () => dragging = true); 
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); dragging = true; }, {passive: false}); 
+        window.addEventListener('mousemove', move); window.addEventListener('touchmove', move, { passive: false }); 
+        window.addEventListener('mouseup', stop); window.addEventListener('touchend', stop); 
+    }
     setupDraggable(markerA, true); setupDraggable(markerB, false);
     window.onload = () => { updateSeekStyle(); checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); };
+    window.onresize = () => updateSeekStyle();
 </script>
 </body>
 </html>
