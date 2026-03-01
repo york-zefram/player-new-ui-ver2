@@ -313,16 +313,8 @@
     window.addEventListener('mouseup', stopTempoChange); document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
 
-    // 再生ボタンの修正
     document.getElementById('btn-play').onclick = () => { 
-        if (audio.paused) { 
-            audio.play().then(() => { 
-                playIcon.innerHTML = ICON_PAUSE; 
-            }).catch(e => console.log(e)); 
-        } else { 
-            audio.pause(); 
-            playIcon.innerHTML = ICON_PLAY; 
-        } 
+        if (audio.paused) { audio.play().then(() => playIcon.innerHTML = ICON_PAUSE); } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } 
     };
     
     function updateFrame() {
@@ -349,26 +341,24 @@
         audio.currentTime = (val / 100) * audio.duration; 
         updateSeekStyle(); 
     };
-    
-    seek.onchange = (e) => { isDragging = false; };
+    seek.onchange = () => { isDragging = false; };
 
     document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; if (posA >= posB) posA = posB - 0.5; updateSeekStyle(); };
     document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; if (posB <= posA) posB = posA + 0.5; updateSeekStyle(); };
     
-    // 戻るボタンの修正（iPhone対応強化）
+    // 【iPhone特化修正】まず再生を試みてから時間をセットする（Ver.1の安定性に近い構成）
     document.getElementById('btn-back-to-a').onclick = () => { 
         if (!audio.duration) return; 
-        // 1. 先に時間を設定
-        audio.currentTime = ((posA / 100) * audio.duration); 
-        seek.value = posA; 
-        updateSeekStyle(); 
-        // 2. 直ちに再生を要求（ユーザー操作と直結させる）
-        audio.play().then(() => { 
-            playIcon.innerHTML = ICON_PAUSE; 
-        }).catch(err => {
-            console.log("Playback failed:", err);
-            // 失敗した場合はアイコンを再生に戻す
-            playIcon.innerHTML = ICON_PLAY;
+        audio.play().then(() => {
+            playIcon.innerHTML = ICON_PAUSE;
+            audio.currentTime = ((posA / 100) * audio.duration); 
+            seek.value = posA; 
+            updateSeekStyle(); 
+        }).catch(() => {
+            // 停止中なら移動だけ行う
+            audio.currentTime = ((posA / 100) * audio.duration); 
+            seek.value = posA; 
+            updateSeekStyle(); 
         });
     };
 
@@ -381,14 +371,7 @@
             const rect = wrapper.getBoundingClientRect(); 
             const x = (e.touches ? e.touches[0].clientX : e.clientX); 
             let val = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100)); 
-            const currentPosPercent = (audio.currentTime / audio.duration) * 100;
-            if (isA) { 
-                posA = Math.min(val, posB - 1); 
-                if (posA > currentPosPercent) { audio.currentTime = (posA / 100) * audio.duration; seek.value = posA; }
-            } else { 
-                posB = Math.max(val, posA + 1); 
-                if (posB < currentPosPercent) { audio.currentTime = (posB / 100) * audio.duration; seek.value = posB; }
-            } 
+            if (isA) { posA = Math.min(val, posB - 1); } else { posB = Math.max(val, posA + 1); } 
             updateSeekStyle(); 
         }; 
         const stop = () => { if (dragging) { dragging = false; setTimeout(() => { isDragging = false; }, 200); } }; 
