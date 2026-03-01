@@ -95,7 +95,6 @@
             color: #fff; font-size: 0.8rem; font-weight: bold; line-height: 1; margin-top: 5px;
             transition: all 0.2s ease;
         }
-        /* 選曲ボタン押下時の発光 */
         .btn-select:active {
             background: rgba(0, 242, 255, 0.2);
             box-shadow: 0 0 20px var(--neon-blue-glow);
@@ -106,9 +105,10 @@
             width: 100%; display: flex; justify-content: center; 
             margin-top: 5px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1); 
         }
-        .time-group { display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: monospace; }
-        #time-display { color: #fff; font-size: 1.4rem; font-weight: bold; }
-        #ab-range-text { color: var(--neon-blue); font-size: 1.1rem; font-weight: bold; }
+        .time-group { display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--font-header); }
+        /* 文字間隔を広げる設定 */
+        #time-display { color: #fff; font-size: 1.1rem; font-weight: bold; letter-spacing: 0.5px; }
+        #ab-range-text { color: var(--neon-blue); font-size: 0.9rem; font-weight: bold; letter-spacing: 1px; }
 
         section.container-2 { 
             position: relative; height: 60px; display: flex; align-items: center; justify-content: center;
@@ -176,14 +176,12 @@
 
         .container-3 { display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 80px; }
         
-        /* 共通ボタンアニメーション */
         .main-btn { 
             color: var(--neon-blue); background: transparent !important;
             cursor: pointer; display: flex; justify-content: center; align-items: center; 
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(0, 242, 255, 0.3);
         }
-        /* 押下時のふわっとエフェクト */
         .main-btn:active {
             background: rgba(0, 242, 255, 0.25) !important;
             box-shadow: 0 0 25px var(--neon-blue-glow), inset 0 0 15px var(--neon-blue-glow) !important;
@@ -255,8 +253,8 @@
         </div>
         <div class="status-action-row">
             <div class="time-group">
-                <div id="time-display">00:00/00:00</div>
-                <div id="ab-range-text">00:00▶00:00</div>
+                <div id="time-display">00:00 / 00:00</div>
+                <div id="ab-range-text">00:00 ▶ 00:00</div>
             </div>
         </div>
         <input type="file" id="file-input" hidden accept=".mp3,.m4a,.wav,.aac">
@@ -340,7 +338,7 @@
         const wrapper = document.getElementById('seek-wrapper'); const rectWidth = wrapper.clientWidth;
         const xA = (posA / 100) * rectWidth; const xB = (posB / 100) * rectWidth;
         markerA.style.left = `${xA}px`; markerB.style.left = `${xB}px`; seekBg.style.left = `${xA}px`; seekBg.style.width = `${xB - xA}px`;
-        if (audio.duration) { document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)}▶${formatTime((posB/100)*audio.duration)}`; }
+        if (audio.duration) { document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)} ▶ ${formatTime((posB/100)*audio.duration)}`; }
     }
 
     function formatTime(s) { if (isNaN(s)) return "00:00"; const m = Math.floor(s / 60); const scale = Math.floor(s % 60); return `${m.toString().padStart(2, '0')}:${scale.toString().padStart(2, '0')}`; }
@@ -374,7 +372,7 @@
             }
 
             seek.value = (audio.currentTime / audio.duration) * 100;
-            document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`;
+            document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
             updateSeekStyle();
         }
         requestAnimationFrame(updateFrame);
