@@ -72,26 +72,28 @@
         }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
+        /* 修正：上部余白を30pxから10pxに短縮 */
         .player-wrapper {
-            width: 100%; padding: 30px 10px 10px 10px; 
+            width: 100%; padding: 10px 10px 10px 10px; 
             box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;
         }
 
+        /* 修正：ヘッダー下のパディングを10pxから2pxに短縮 */
         header.glass-header { 
             background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
-            text-align: center; padding: 0 0 10px 0;
+            text-align: center; padding: 0 0 2px 0;
         }
         
-        /* 修正：タイトルを横幅320pxに収まるよう調整 */
         .app-title { 
             margin: 0; color: var(--neon-blue); font-family: var(--font-header);
             font-size: 0.85rem; letter-spacing: 1px; text-shadow: 0 0 10px var(--neon-blue-glow); 
             white-space: nowrap;
         }
 
+        /* 修正：楽曲情報エリアのパディングを10pxから5pxに短縮 */
         .info-header { 
             background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
-            display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0;
+            display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 5px 0;
         }
         
         .text-fields { 
@@ -294,6 +296,7 @@
 <audio id="audio"></audio>
 
 <script>
+    /* JavaScript ロジックは一切変更なし */
     const audio = document.getElementById('audio');
     const seek = document.getElementById('main-seek');
     const seekBg = document.getElementById('seek-bg');
