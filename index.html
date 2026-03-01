@@ -276,7 +276,7 @@
     fileInput.onchange = (e) => {
         const file = e.target.files[0]; if (!file) { isFileOpening = false; return; }
         loadingOverlay.style.display = 'flex'; loadingSpinner.style.display = 'block'; tapToStart.style.display = 'none';
-        audio.pause(); playIcon.innerHTML = ICON_PLAY; const fileUrl = URL.createObjectURL(file); audio.src = fileUrl; posA = 0; posB = 100; audio.currentTime = 0; seek.value = 1.5;
+        audio.pause(); playIcon.innerHTML = ICON_PLAY; const fileUrl = URL.createObjectURL(file); audio.src = fileUrl; posA = 0; posB = 100; audio.currentTime = 0; seek.value = 0;
         let forcedReady = setTimeout(() => { showReadyUI(); }, 500);
         function showReadyUI() { clearTimeout(forcedReady); loadingSpinner.style.display = 'none'; tapToStart.style.display = 'block';
             setTimeout(() => { window.jsmediatags.read(file, { onSuccess: (tag) => { const t = tag.tags; document.getElementById('title-text').innerText = t.title || file.name; document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); }, onError: () => { document.getElementById('title-text').innerText = file.name; document.getElementById('artist-text').innerText = "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); } }); }, 100);
@@ -313,7 +313,17 @@
     window.addEventListener('mouseup', stopTempoChange); document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
 
-    document.getElementById('btn-play').onclick = () => { if (audio.paused) { audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }); } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } };
+    // 再生ボタンの修正
+    document.getElementById('btn-play').onclick = () => { 
+        if (audio.paused) { 
+            audio.play().then(() => { 
+                playIcon.innerHTML = ICON_PAUSE; 
+            }).catch(e => console.log(e)); 
+        } else { 
+            audio.pause(); 
+            playIcon.innerHTML = ICON_PLAY; 
+        } 
+    };
     
     function updateFrame() {
         if (audio.duration && !isDragging) {
@@ -345,16 +355,20 @@
     document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; if (posA >= posB) posA = posB - 0.5; updateSeekStyle(); };
     document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; if (posB <= posA) posB = posA + 0.5; updateSeekStyle(); };
     
-    // 【修正箇所】iPhoneのオートプレイ制限を回避するために .play() を追加
+    // 戻るボタンの修正（iPhone対応強化）
     document.getElementById('btn-back-to-a').onclick = () => { 
         if (!audio.duration) return; 
+        // 1. 先に時間を設定
         audio.currentTime = ((posA / 100) * audio.duration); 
         seek.value = posA; 
         updateSeekStyle(); 
+        // 2. 直ちに再生を要求（ユーザー操作と直結させる）
         audio.play().then(() => { 
             playIcon.innerHTML = ICON_PAUSE; 
         }).catch(err => {
-            console.log("Playback blocked:", err);
+            console.log("Playback failed:", err);
+            // 失敗した場合はアイコンを再生に戻す
+            playIcon.innerHTML = ICON_PLAY;
         });
     };
 
