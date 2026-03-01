@@ -182,10 +182,25 @@
         .container-tempo { display: flex; flex-direction: column; gap: 20px; padding: 8px 10px; margin-top: 15px; }
         .tempo-controls { display: flex; justify-content: space-between; align-items: center; width: 90%; margin: 0 auto; }
         .btn-tempo { width: 60px; height: 30px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; background: transparent !important; border: 2px solid var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue-glow), inset 0 0 5px var(--neon-blue-glow); text-shadow: 0 0 5px var(--neon-blue-glow); }
-        .tempo-slider-wrapper { position: relative; width: 88%; height: 10px; display: flex; align-items: center; margin: 0 auto; }
-        .tempo-bg-layer { position: absolute; width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; z-index: 1; }
-        input[type="range"]#tempo-slider { -webkit-appearance: none; width: 100%; background: transparent; position: relative; z-index: 5; height: 50px; outline: none; }
-        input[type="range"]#tempo-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px var(--neon-blue); cursor: pointer; }
+        
+        /* 修正：ラッパーの高さを再生バーと同じ40pxに（以前は10px） */
+        .tempo-slider-wrapper { position: relative; width: 88%; height: 40px; display: flex; align-items: center; margin: 0 auto; }
+        
+        .tempo-bg-layer { position: absolute; width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; z-index: 1; top: 50%; transform: translateY(-50%); }
+        input[type="range"]#tempo-slider { -webkit-appearance: none; width: 100%; background: transparent; position: relative; z-index: 5; height: 50px; outline: none; margin: 0; }
+        
+        /* 修正：つまみのスタイルを再生点と同じに（大きさ、グロー効果） */
+        input[type="range"]#tempo-slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            height: var(--thumb-size); /* 32px */
+            width: var(--thumb-size); /* 32px */
+            border-radius: 50%; 
+            background: #fff; 
+            /* 再生点と同じグロー効果 */
+            box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--neon-blue-glow); 
+            cursor: pointer; 
+        }
+        
         .tempo-labels { display: flex; justify-content: space-between; color: var(--neon-blue); font-family: monospace; font-size: 1rem; font-weight: bold; opacity: 0.8; margin-top: -8px; padding: 0 5%; }
     </style>
 </head>
@@ -313,7 +328,6 @@
     window.addEventListener('mouseup', stopTempoChange); document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
 
-    // 再生ボタン：Ver.1の極めてシンプルな方式
     document.getElementById('btn-play').onclick = () => { 
         if (audio.paused) { audio.play(); playIcon.innerHTML = ICON_PAUSE; } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } 
     };
@@ -321,11 +335,9 @@
     function updateFrame() {
         if (audio.duration && !isDragging) {
             const currentTimePercent = (audio.currentTime / audio.duration) * 100;
-            // B点ループ：A点に飛ばす
             if (currentTimePercent >= posB) { 
                 audio.currentTime = (posA / 100) * audio.duration; 
             } 
-            // A点震え防止：A点より大幅に前（手動戻し以外）ならA点へ
             else if (currentTimePercent < posA - 0.2) { 
                 audio.currentTime = (posA / 100) * audio.duration; 
             }
@@ -351,7 +363,6 @@
     document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; if (posA >= posB) posA = posB - 0.5; updateSeekStyle(); };
     document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; if (posB <= posA) posB = posA + 0.5; updateSeekStyle(); };
     
-    // 戻るボタン：Ver.1のロジックを優先（再生してから時間をセット）
     document.getElementById('btn-back-to-a').onclick = () => { 
         if (!audio.duration) return; 
         audio.play();
