@@ -72,13 +72,12 @@
         }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* 修正：上部余白を30pxから10pxに短縮 */
+        /* 修正：上部余白を25pxに指定 */
         .player-wrapper {
-            width: 100%; padding: 10px 10px 10px 10px; 
+            width: 100%; padding: 25px 10px 10px 10px; 
             box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;
         }
 
-        /* 修正：ヘッダー下のパディングを10pxから2pxに短縮 */
         header.glass-header { 
             background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
             text-align: center; padding: 0 0 2px 0;
@@ -90,7 +89,6 @@
             white-space: nowrap;
         }
 
-        /* 修正：楽曲情報エリアのパディングを10pxから5pxに短縮 */
         .info-header { 
             background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
             display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 5px 0;
@@ -235,7 +233,6 @@
     </style>
 </head>
 <body>
-
 <div id="loading-overlay">
     <div class="spinner" id="loading-spinner"></div>
     <div id="tap-to-start">READY</div>
@@ -309,205 +306,56 @@
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingSpinner = document.getElementById('loading-spinner');
     const tapToStart = document.getElementById('tap-to-start');
-    
     const ICON_PLAY = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
     const ICON_PAUSE = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M6.5 19h4V5h-4v14zm9 0h4V5h-4v14z"/></svg>';
-
     let posA = 0; let posB = 100;
     let isDragging = false;
     let isFileOpening = false; 
-
-    function startSequence() {
-        loadingOverlay.style.display = 'none';
-        audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }).catch(err => { console.log("Play failed:", err); });
-    }
-
+    function startSequence() { loadingOverlay.style.display = 'none'; audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }).catch(err => { console.log("Play failed:", err); }); }
     tapToStart.onclick = (e) => { e.stopPropagation(); startSequence(); };
-    btnSelect.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (isFileOpening) return;
-        isFileOpening = true;
-        audio.load();
-        fileInput.click();
-        setTimeout(() => { isFileOpening = false; }, 1000); 
-    });
-
+    btnSelect.addEventListener('click', (e) => { e.stopPropagation(); if (isFileOpening) return; isFileOpening = true; audio.load(); fileInput.click(); setTimeout(() => { isFileOpening = false; }, 1000); });
     fileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) { isFileOpening = false; return; }
-        loadingOverlay.style.display = 'flex';
-        loadingSpinner.style.display = 'block';
-        tapToStart.style.display = 'none';
-        audio.pause();
-        const fileUrl = URL.createObjectURL(file);
-        audio.src = fileUrl;
-        posA = 0; posB = 100;
-        audio.currentTime = 0; 
-        seek.value = 0;
+        const file = e.target.files[0]; if (!file) { isFileOpening = false; return; }
+        loadingOverlay.style.display = 'flex'; loadingSpinner.style.display = 'block'; tapToStart.style.display = 'none';
+        audio.pause(); const fileUrl = URL.createObjectURL(file); audio.src = fileUrl; posA = 0; posB = 100; audio.currentTime = 0; seek.value = 0;
         let forcedReady = setTimeout(() => { showReadyUI(); }, 500);
-        function showReadyUI() {
-            clearTimeout(forcedReady);
-            loadingSpinner.style.display = 'none';
-            tapToStart.style.display = 'block';
-            setTimeout(() => {
-                window.jsmediatags.read(file, {
-                    onSuccess: (tag) => {
-                        const t = tag.tags;
-                        document.getElementById('title-text').innerText = t.title || file.name;
-                        document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST";
-                        setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100);
-                    },
-                    onError: () => {
-                        document.getElementById('title-text').innerText = file.name;
-                        document.getElementById('artist-text').innerText = "UNKNOWN ARTIST";
-                        setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100);
-                    }
-                });
-            }, 300);
+        function showReadyUI() { clearTimeout(forcedReady); loadingSpinner.style.display = 'none'; tapToStart.style.display = 'block';
+            setTimeout(() => { window.jsmediatags.read(file, { onSuccess: (tag) => { const t = tag.tags; document.getElementById('title-text').innerText = t.title || file.name; document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); }, onError: () => { document.getElementById('title-text').innerText = file.name; document.getElementById('artist-text').innerText = "UNKNOWN ARTIST"; setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100); } }); }, 300);
         }
-        audio.onloadeddata = () => { showReadyUI(); audio.onloadeddata = null; };
-        updateTempo(100);
-        isFileOpening = false;
+        audio.onloadeddata = () => { showReadyUI(); audio.onloadeddata = null; }; updateTempo(100); isFileOpening = false;
     };
-
     function checkMarquee(innerId, boxId) {
-        const inner = document.getElementById(innerId);
-        const box = document.getElementById(boxId);
-        if (!inner || !box) return;
-        inner.classList.remove('scrolling-content');
-        const oldClone = inner.querySelector('.marquee-clone');
-        if (oldClone) inner.removeChild(oldClone);
-        if (inner.scrollWidth > box.clientWidth + 2) {
-            const span = inner.querySelector('span');
-            const clone = span.cloneNode(true);
-            clone.classList.add('marquee-clone');
-            inner.appendChild(clone);
-            inner.classList.add('scrolling-content');
-        }
+        const inner = document.getElementById(innerId); const box = document.getElementById(boxId); if (!inner || !box) return;
+        inner.classList.remove('scrolling-content'); const oldClone = inner.querySelector('.marquee-clone'); if (oldClone) inner.removeChild(oldClone);
+        if (inner.scrollWidth > box.clientWidth + 2) { const span = inner.querySelector('span'); const clone = span.cloneNode(true); clone.classList.add('marquee-clone'); inner.appendChild(clone); inner.classList.add('scrolling-content'); }
     }
-
     function updateSeekStyle() {
-        const wrapper = document.getElementById('seek-wrapper');
-        const rectWidth = wrapper.clientWidth;
-        const usableWidth = rectWidth;
-        const xA = (posA / 100) * usableWidth;
-        const xB = (posB / 100) * usableWidth;
-        markerA.style.left = `${xA}px`;
-        markerB.style.left = `${xB}px`;
-        seekBg.style.left = `${xA}px `;
-        seekBg.style.width = `${xB - xA}px`;
-        if (audio.duration) {
-            document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)}▶${formatTime((posB/100)*audio.duration)}`;
-        }
+        const wrapper = document.getElementById('seek-wrapper'); const rectWidth = wrapper.clientWidth; const usableWidth = rectWidth;
+        const xA = (posA / 100) * usableWidth; const xB = (posB / 100) * usableWidth;
+        markerA.style.left = `${xA}px`; markerB.style.left = `${xB}px`; seekBg.style.left = `${xA}px `; seekBg.style.width = `${xB - xA}px`;
+        if (audio.duration) { document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)}▶${formatTime((posB/100)*audio.duration)}`; }
     }
-
-    function formatTime(s) {
-        if (isNaN(s)) return "00:00";
-        const m = Math.floor(s / 60); const scale = Math.floor(s % 60);
-        return `${m.toString().padStart(2, '0')}:${scale.toString().padStart(2, '0')}`;
-    }
-
-    function updateTempo(val) {
-        const newTempo = Math.max(50, Math.min(150, parseInt(val)));
-        tempoSlider.value = newTempo;
-        audio.playbackRate = newTempo / 100;
-    }
-
-    let tempoInterval;
-    let tempoDelay;
-    function startTempoChange(delta) {
-        updateTempo(parseInt(tempoSlider.value) + delta);
-        tempoDelay = setTimeout(() => {
-            tempoInterval = setInterval(() => {
-                updateTempo(parseInt(tempoSlider.value) + delta);
-            }, 80);
-        }, 500);
-    }
-    function stopTempoChange() { 
-        clearTimeout(tempoDelay);
-        clearInterval(tempoInterval); 
-    }
-
-    audio.onloadedmetadata = () => { 
-        updateSeekStyle();
-        checkMarquee('title-inner', 'title-box');
-        checkMarquee('artist-inner', 'artist-box');
-    };
-
-    const tMinus = document.getElementById('tempo-minus');
-    const tPlus = document.getElementById('tempo-plus');
-    tMinus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(-1); });
-    tPlus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(1); });
-    window.addEventListener('touchend', stopTempoChange);
-    window.addEventListener('touchcancel', stopTempoChange);
-    tMinus.addEventListener('mousedown', () => startTempoChange(-1));
-    tPlus.addEventListener('mousedown', () => startTempoChange(1));
-    window.addEventListener('mouseup', stopTempoChange);
-    document.getElementById('tempo-reset').onclick = () => updateTempo(100);
+    function formatTime(s) { if (isNaN(s)) return "00:00"; const m = Math.floor(s / 60); const scale = Math.floor(s % 60); return `${m.toString().padStart(2, '0')}:${scale.toString().padStart(2, '0')}`; }
+    function updateTempo(val) { const newTempo = Math.max(50, Math.min(150, parseInt(val))); tempoSlider.value = newTempo; audio.playbackRate = newTempo / 100; }
+    let tempoInterval; let tempoDelay;
+    function startTempoChange(delta) { updateTempo(parseInt(tempoSlider.value) + delta); tempoDelay = setTimeout(() => { tempoInterval = setInterval(() => { updateTempo(parseInt(tempoSlider.value) + delta); }, 80); }, 500); }
+    function stopTempoChange() { clearTimeout(tempoDelay); clearInterval(tempoInterval); }
+    audio.onloadedmetadata = () => { updateSeekStyle(); checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); };
+    const tMinus = document.getElementById('tempo-minus'); const tPlus = document.getElementById('tempo-plus');
+    tMinus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(-1); }); tPlus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(1); });
+    window.addEventListener('touchend', stopTempoChange); window.addEventListener('touchcancel', stopTempoChange);
+    tMinus.addEventListener('mousedown', () => startTempoChange(-1)); tPlus.addEventListener('mousedown', () => startTempoChange(1));
+    window.addEventListener('mouseup', stopTempoChange); document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
-
-    document.getElementById('btn-play').onclick = () => {
-        if (audio.paused) { audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }); } 
-        else { audio.pause(); playIcon.innerHTML = ICON_PLAY; }
-    };
-
-    audio.ontimeupdate = () => {
-        if (!audio.duration || isDragging) return;
-        const currentP = (audio.currentTime / audio.duration) * 100;
-        if (currentP < posA || currentP >= posB) { audio.currentTime = ((posA / 100) * audio.duration); }
-        let seekVal = (audio.currentTime / audio.duration) * 100;
-        if (seekVal < posA) seekVal = posA;
-        if (seekVal > posB) seekVal = posB;
-        seek.value = seekVal;
-        document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`;
-        updateSeekStyle();
-    };
-
-    seek.oninput = (e) => { 
-        isDragging = true;
-        let val = parseFloat(e.target.value);
-        if (val < posA) val = posA;
-        if (val > posB) val = posB;
-        e.target.value = val;
-        audio.currentTime = (val / 100) * audio.duration; 
-        updateSeekStyle(); 
-    };
+    document.getElementById('btn-play').onclick = () => { if (audio.paused) { audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }); } else { audio.pause(); playIcon.innerHTML = ICON_PLAY; } };
+    audio.ontimeupdate = () => { if (!audio.duration || isDragging) return; const currentP = (audio.currentTime / audio.duration) * 100; if (currentP < posA || currentP >= posB) { audio.currentTime = ((posA / 100) * audio.duration); } let seekVal = (audio.currentTime / audio.duration) * 100; if (seekVal < posA) seekVal = posA; if (seekVal > posB) seekVal = posB; seek.value = seekVal; document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`; updateSeekStyle(); };
+    seek.oninput = (e) => { isDragging = true; let val = parseFloat(e.target.value); if (val < posA) val = posA; if (val > posB) val = posB; e.target.value = val; audio.currentTime = (val / 100) * audio.duration; updateSeekStyle(); };
     seek.onchange = () => { isDragging = false; };
-
     document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; updateSeekStyle(); };
     document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; updateSeekStyle(); };
-    
-    document.getElementById('btn-back-to-a').onclick = () => { 
-        if (!audio.duration) return;
-        audio.currentTime = ((posA / 100) * audio.duration);
-        seek.value = posA;
-        updateSeekStyle();
-    };
-
-    function setupDraggable(el, isA) {
-        let dragging = false;
-        const move = (e) => {
-            if (!dragging) return;
-            isDragging = true;
-            const rect = seek.getBoundingClientRect();
-            const x = (e.touches ? e.touches[0].clientX : e.clientX);
-            let val = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
-            if (isA) { posA = Math.min(val, posB - 0.5); } 
-            else { posB = Math.max(val, posA + 0.5); }
-            updateSeekStyle();
-        };
-        const stop = () => { if (dragging) { dragging = false; setTimeout(() => { isDragging = false; }, 200); } };
-        el.addEventListener('mousedown', () => dragging = true);
-        el.addEventListener('touchstart', (e) => { e.preventDefault(); dragging = true; }, {passive: false});
-        window.addEventListener('mousemove', move);
-        window.addEventListener('touchmove', move, { passive: false });
-        window.addEventListener('mouseup', stop);
-        window.addEventListener('touchend', stop);
-    }
-
-    setupDraggable(markerA, true); 
-    setupDraggable(markerB, false);
-    
+    document.getElementById('btn-back-to-a').onclick = () => { if (!audio.duration) return; audio.currentTime = ((posA / 100) * audio.duration); seek.value = posA; updateSeekStyle(); };
+    function setupDraggable(el, isA) { let dragging = false; const move = (e) => { if (!dragging) return; isDragging = true; const rect = seek.getBoundingClientRect(); const x = (e.touches ? e.touches[0].clientX : e.clientX); let val = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100)); if (isA) { posA = Math.min(val, posB - 0.5); } else { posB = Math.max(val, posA + 0.5); } updateSeekStyle(); }; const stop = () => { if (dragging) { dragging = false; setTimeout(() => { isDragging = false; }, 200); } }; el.addEventListener('mousedown', () => dragging = true); el.addEventListener('touchstart', (e) => { e.preventDefault(); dragging = true; }, {passive: false}); window.addEventListener('mousemove', move); window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('mouseup', stop); window.addEventListener('touchend', stop); }
+    setupDraggable(markerA, true); setupDraggable(markerB, false);
     window.onload = () => { updateSeekStyle(); checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); };
 </script>
 </body>
