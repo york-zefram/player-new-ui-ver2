@@ -103,13 +103,12 @@
         #time-display { color: #fff; font-size: 1.4rem; font-weight: bold; }
         #ab-range-text { color: var(--neon-blue); font-size: 1.1rem; font-weight: bold; }
 
-        /* 修正：コンテナのパディングを廃止し以前のサイズ感に戻す */
         section.container-2 { 
             position: relative; height: 60px; display: flex; align-items: center; justify-content: center;
         }
         .seek-wrapper { 
             position: relative; 
-            width: 87%; /* 以前の比率付近に固定 */
+            width: 87%; 
             height: 6px;
             display: flex; 
             align-items: center; 
@@ -345,7 +344,19 @@
 
     document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; if (posA >= posB) posA = posB - 0.5; updateSeekStyle(); };
     document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; if (posB <= posA) posB = posA + 0.5; updateSeekStyle(); };
-    document.getElementById('btn-back-to-a').onclick = () => { if (!audio.duration) return; audio.currentTime = ((posA / 100) * audio.duration); seek.value = posA; updateSeekStyle(); };
+    
+    // 【修正箇所】iPhoneのオートプレイ制限を回避するために .play() を追加
+    document.getElementById('btn-back-to-a').onclick = () => { 
+        if (!audio.duration) return; 
+        audio.currentTime = ((posA / 100) * audio.duration); 
+        seek.value = posA; 
+        updateSeekStyle(); 
+        audio.play().then(() => { 
+            playIcon.innerHTML = ICON_PAUSE; 
+        }).catch(err => {
+            console.log("Playback blocked:", err);
+        });
+    };
 
     function setupDraggable(el, isA) { 
         let dragging = false; 
