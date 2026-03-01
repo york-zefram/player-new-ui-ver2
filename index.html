@@ -91,13 +91,7 @@
             display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0;
         }
         
-        .thumb-box {
-            width: 110px; height: 110px; border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(0,0,0,0.5); flex-shrink: 0;
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
-        }
-        #jacket-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        /* 修正：thumb-box と jacket-img のCSS定義を削除 */
 
         .text-fields { 
             width: 100%; height: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: hidden;
@@ -125,7 +119,6 @@
         #time-display { color: #fff; font-size: 1.4rem; font-weight: bold; }
         #ab-range-text { color: var(--neon-blue); font-size: 1.1rem; font-weight: bold; }
 
-        /* 再生バーエリア */
         section.container-2 { 
             background: none; border: none; box-shadow: none; backdrop-filter: none;
             position: relative; height: 100px; display: flex; align-items: center; 
@@ -165,22 +158,19 @@
             box-sizing: border-box;
         }
         
-        /* 修正：再生位置ノブ：白の塗りつぶしでグロー効果 */
         input[type="range"]#main-seek::-webkit-slider-thumb { 
             -webkit-appearance: none; 
             height: var(--thumb-size); 
             width: var(--thumb-size); 
             border-radius: 50%; 
-            background: #fff; /* 白の塗りつぶし */
-            border: none; /* 枠線をなくす */
-            /* 強力なホワイトグローとネオンブルーグローの複合 */
+            background: #fff;
+            border: none;
             box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--neon-blue-glow); 
             cursor: pointer; 
             position: relative; 
             z-index: 10;
         }
 
-        /* A・Bマーカー：サイズ拡大状態を維持 */
         .marker { 
             position: absolute; 
             width: var(--marker-size); 
@@ -202,7 +192,6 @@
             pointer-events: auto;
         }
 
-        /* 再生エリア */
         .container-3 { 
             background: none; border: none; backdrop-filter: none; -webkit-backdrop-filter: none;
             display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 120px; 
@@ -228,7 +217,6 @@
         .btn-icon-s { font-size: 0.9rem; font-family: var(--font-header); letter-spacing: -1px; filter: drop-shadow(0 0 5px var(--neon-blue)); }
         .svg-icon { width: 1em; height: 1em; fill: currentColor; display: block; }
 
-        /* テンポエリア */
         .container-tempo { background: none; border: none; display: flex; flex-direction: column; gap: 20px; padding: 8px 10px; }
         .tempo-controls { display: flex; justify-content: space-between; align-items: center; width: 90%; margin: 0 auto; }
         .btn-tempo { 
@@ -254,7 +242,6 @@
     <header class="glass-header"><h1 class="app-title">ZEFRAM PLAYER NEO</h1></header>
 
     <section class="info-header">
-        <div class="thumb-box" id="jacket-container"><img id="jacket-img" src="" alt=""></div>
         <div class="text-fields">
             <div class="marquee-box" id="title-box"><div id="title-inner" class="marquee-inner"><span id="title-text">SELECT TRACK</span></div></div>
             <div class="artist-row">
@@ -364,12 +351,7 @@
                         const t = tag.tags;
                         document.getElementById('title-text').innerText = t.title || file.name;
                         document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST";
-                        if (t.picture) {
-                            let base = "";
-                            for (let i = 0; i < t.picture.data.length; i++) base += String.fromCharCode(t.picture.data[i]);
-                            document.getElementById('jacket-img').src = "data:" + t.picture.format + ";base64," + window.btoa(base);
-                            document.getElementById('jacket-img').style.display = 'block';
-                        } else { document.getElementById('jacket-img').style.display = 'none'; }
+                        /* 修正：ジャケット画像表示ロジックを削除 */
                         setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100);
                     },
                     onError: () => {
@@ -405,16 +387,12 @@
         const wrapper = document.getElementById('seek-wrapper');
         const rectWidth = wrapper.clientWidth;
         const usableWidth = rectWidth;
-        
         const xA = (posA / 100) * usableWidth;
         const xB = (posB / 100) * usableWidth;
-        
         markerA.style.left = `${xA}px`;
         markerB.style.left = `${xB}px`;
-
         seekBg.style.left = `${xA}px `;
         seekBg.style.width = `${xB - xA}px`;
-
         if (audio.duration) {
             document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)}▶${formatTime((posB/100)*audio.duration)}`;
         }
@@ -427,17 +405,25 @@
     }
 
     function updateTempo(val) {
-        const newTempo = Math.max(50, Math.min(150, val));
+        const newTempo = Math.max(50, Math.min(150, parseInt(val)));
         tempoSlider.value = newTempo;
         audio.playbackRate = newTempo / 100;
     }
 
     let tempoInterval;
+    let tempoDelay;
     function startTempoChange(delta) {
         updateTempo(parseInt(tempoSlider.value) + delta);
-        tempoInterval = setInterval(() => updateTempo(parseInt(tempoSlider.value) + delta), 100);
+        tempoDelay = setTimeout(() => {
+            tempoInterval = setInterval(() => {
+                updateTempo(parseInt(tempoSlider.value) + delta);
+            }, 80);
+        }, 500);
     }
-    function stopTempoChange() { clearInterval(tempoInterval); }
+    function stopTempoChange() { 
+        clearTimeout(tempoDelay);
+        clearInterval(tempoInterval); 
+    }
 
     audio.onloadedmetadata = () => { 
         updateSeekStyle();
@@ -445,9 +431,15 @@
         checkMarquee('artist-inner', 'artist-box');
     };
 
-    document.getElementById('tempo-minus').addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(-1); });
-    document.getElementById('tempo-plus').addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(1); });
+    const tMinus = document.getElementById('tempo-minus');
+    const tPlus = document.getElementById('tempo-plus');
+    tMinus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(-1); });
+    tPlus.addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(1); });
     window.addEventListener('touchend', stopTempoChange);
+    window.addEventListener('touchcancel', stopTempoChange);
+    tMinus.addEventListener('mousedown', () => startTempoChange(-1));
+    tPlus.addEventListener('mousedown', () => startTempoChange(1));
+    window.addEventListener('mouseup', stopTempoChange);
     document.getElementById('tempo-reset').onclick = () => updateTempo(100);
     tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
 
