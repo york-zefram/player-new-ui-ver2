@@ -81,9 +81,12 @@
             background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
             text-align: center; padding: 0 0 10px 0;
         }
+        
+        /* 修正：タイトルを横幅320pxに収まるよう調整 */
         .app-title { 
             margin: 0; color: var(--neon-blue); font-family: var(--font-header);
-            font-size: 1.0rem; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-blue-glow); 
+            font-size: 0.85rem; letter-spacing: 1px; text-shadow: 0 0 10px var(--neon-blue-glow); 
+            white-space: nowrap;
         }
 
         .info-header { 
@@ -91,8 +94,6 @@
             display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0;
         }
         
-        /* 修正：thumb-box と jacket-img のCSS定義を削除 */
-
         .text-fields { 
             width: 100%; height: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: hidden;
         }
@@ -351,7 +352,6 @@
                         const t = tag.tags;
                         document.getElementById('title-text').innerText = t.title || file.name;
                         document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST";
-                        /* 修正：ジャケット画像表示ロジックを削除 */
                         setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100);
                     },
                     onError: () => {
