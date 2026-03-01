@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ZEFRAM PLAYER NEO</title>
+    <meta name="apple-mobile-web-app-title" content="ZPN">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-grad-start: #00f2ff; 
+            --neon-grad-mid: #b3faff;   
+            --neon-grad-end: #0077ff;   
+            --neon-blue-glow: rgba(0, 242, 255, 0.7);
+            --white-glow: rgba(255, 255, 255, 0.9);
+            --bg-black: #080808;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --font-header: 'Michroma', sans-serif;
+            --font-main: "A-OTF Gothic MB101 Pr5 R", sans-serif;
+            --marker-size: 32px;
+            --thumb-size: 32px; 
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: #fff;
+            font-family: var(--font-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            touch-action: none; 
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(8, 8, 8, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(0, 242, 255, 0.2);
+            border-top: 4px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 15px var(--neon-blue-glow);
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #tap-to-start {
+            display: none; color: var(--neon-blue); font-weight: bold;
+            border: 2px solid var(--neon-blue); padding: 15px 30px; border-radius: 30px;
+            box-shadow: 0 0 20px var(--neon-blue-glow); animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        .player-wrapper {
+            width: 100%; padding: 30px 10px 10px 10px; 
+            box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;
+        }
+
+        header.glass-header { 
+            background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
+            text-align: center; padding: 0 0 10px 0;
+        }
+        .app-title { 
+            margin: 0; color: var(--neon-blue); font-family: var(--font-header);
+            font-size: 1.0rem; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-blue-glow); 
+        }
+
+        .info-header { 
+            background: none !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important;
+            display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 10px 0;
+        }
+        
+        .thumb-box {
+            width: 110px; height: 110px; border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0,0,0,0.5); flex-shrink: 0;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        #jacket-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        .text-fields { 
+            width: 100%; height: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: hidden;
+        }
+        .marquee-box { width: 100%; overflow: hidden; white-space: nowrap; text-align: center; min-height: 1.2em; }
+        .marquee-inner { display: inline-block; white-space: nowrap; }
+        .scrolling-content { display: inline-block; padding-right: 50px; animation: scroll-slow 15s linear infinite; }
+        @keyframes scroll-slow { 0% { transform: translateX(0); } 10% { transform: translateX(0); } 85% { transform: translateX(-50%); } 100% { transform: translateX(-50%); } }
+        
+        #title-text { font-weight: bold; font-size: 1.0rem; line-height: 1.2; color: #fff; }
+        .artist-row { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+        #artist-text { font-size: 0.8rem; color: var(--neon-blue); line-height: 1.2; }
+        
+        .btn-select { 
+            width: 70%; height: 34px; border-radius: 17px; 
+            border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.1);
+            color: #fff; font-size: 0.8rem; font-weight: bold; line-height: 1; margin-top: 5px;
+        }
+
+        .status-action-row { 
+            width: 100%; display: flex; justify-content: center; 
+            margin-top: 5px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+        .time-group { display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: monospace; }
+        #time-display { color: #fff; font-size: 1.4rem; font-weight: bold; }
+        #ab-range-text { color: var(--neon-blue); font-size: 1.1rem; font-weight: bold; }
+
+        /* 再生バーエリア */
+        section.container-2 { 
+            background: none; border: none; box-shadow: none; backdrop-filter: none;
+            position: relative; height: 100px; display: flex; align-items: center; 
+        }
+        .seek-wrapper { 
+            position: relative; 
+            width: 89.2%; 
+            height: 6px;
+            display: flex; 
+            align-items: center; 
+            margin: 0 auto; 
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: visible; 
+        }
+        
+        .seek-bg-layer { 
+            position: absolute; 
+            top: 0;
+            bottom: 0;
+            background: var(--neon-blue);
+            z-index: 1; 
+            border-radius: 3px;
+            box-shadow: 0 0 15px var(--neon-blue-glow);
+        }
+        
+        input[type="range"]#main-seek { 
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+            position: relative; 
+            z-index: 5; 
+            height: 40px;
+            outline: none;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* 修正：再生位置ノブ：白の塗りつぶしでグロー効果 */
+        input[type="range"]#main-seek::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            height: var(--thumb-size); 
+            width: var(--thumb-size); 
+            border-radius: 50%; 
+            background: #fff; /* 白の塗りつぶし */
+            border: none; /* 枠線をなくす */
+            /* 強力なホワイトグローとネオンブルーグローの複合 */
+            box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--neon-blue-glow); 
+            cursor: pointer; 
+            position: relative; 
+            z-index: 10;
+        }
+
+        /* A・Bマーカー：サイズ拡大状態を維持 */
+        .marker { 
+            position: absolute; 
+            width: var(--marker-size); 
+            height: var(--marker-size); 
+            border-radius: 50%; 
+            background: #000; 
+            color: var(--neon-blue); 
+            font-size: 14px; 
+            font-family: var(--font-header);
+            font-weight: bold; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 20; 
+            border: 1px solid var(--neon-blue); 
+            box-shadow: 0 0 8px var(--neon-blue-glow);
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+        }
+
+        /* 再生エリア */
+        .container-3 { 
+            background: none; border: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+            display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 120px; 
+        }
+        .main-btn { 
+            color: var(--neon-blue); 
+            background: transparent !important;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+        .btn-large { 
+            width: 76px; height: 76px; border-radius: 50%; 
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue-glow), inset 0 0 10px var(--neon-blue-glow);
+        }
+        .btn-small { 
+            width: 48px; height: 48px; border-radius: 50%; 
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 8px var(--neon-blue-glow);
+            opacity: 0.8;
+        }
+        .btn-icon { font-size: 2.4rem; filter: drop-shadow(0 0 8px var(--neon-blue)); display: flex; align-items: center; justify-content: center; } 
+        .btn-icon-s { font-size: 0.9rem; font-family: var(--font-header); letter-spacing: -1px; filter: drop-shadow(0 0 5px var(--neon-blue)); }
+        .svg-icon { width: 1em; height: 1em; fill: currentColor; display: block; }
+
+        /* テンポエリア */
+        .container-tempo { background: none; border: none; display: flex; flex-direction: column; gap: 20px; padding: 8px 10px; }
+        .tempo-controls { display: flex; justify-content: space-between; align-items: center; width: 90%; margin: 0 auto; }
+        .btn-tempo { 
+            width: 60px; height: 30px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; 
+            background: transparent !important; border: 2px solid var(--neon-blue); color: var(--neon-blue); 
+            box-shadow: 0 0 10px var(--neon-blue-glow), inset 0 0 5px var(--neon-blue-glow); text-shadow: 0 0 5px var(--neon-blue-glow); 
+        }
+        .tempo-slider-wrapper { position: relative; width: 90%; height: 10px; display: flex; align-items: center; margin: 0 auto; }
+        .tempo-bg-layer { position: absolute; width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; z-index: 1; }
+        input[type="range"]#tempo-slider { -webkit-appearance: none; width: 100%; background: transparent; position: relative; z-index: 5; height: 50px; outline: none; }
+        input[type="range"]#tempo-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px var(--neon-blue); cursor: pointer; }
+        .tempo-labels { display: flex; justify-content: space-between; color: var(--neon-blue); font-family: monospace; font-size: 1rem; font-weight: bold; opacity: 0.8; margin-top: -8px; padding: 0 5%; }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div class="spinner" id="loading-spinner"></div>
+    <div id="tap-to-start">READY</div>
+</div>
+
+<div class="player-wrapper">
+    <header class="glass-header"><h1 class="app-title">ZEFRAM PLAYER NEO</h1></header>
+
+    <section class="info-header">
+        <div class="thumb-box" id="jacket-container"><img id="jacket-img" src="" alt=""></div>
+        <div class="text-fields">
+            <div class="marquee-box" id="title-box"><div id="title-inner" class="marquee-inner"><span id="title-text">SELECT TRACK</span></div></div>
+            <div class="artist-row">
+                <div class="marquee-box" id="artist-box"><div id="artist-inner" class="marquee-inner"><span id="artist-text">UNKNOWN ARTIST</span></div></div>
+                <button class="main-btn btn-select" id="btn-select-file">選 曲</button>
+            </div>
+        </div>
+        <div class="status-action-row">
+            <div class="time-group">
+                <div id="time-display">00:00/00:00</div>
+                <div id="ab-range-text">00:00▶00:00</div>
+            </div>
+        </div>
+        <input type="file" id="file-input" hidden accept=".mp3,.m4a,.wav,.aac">
+    </section>
+
+    <section class="container-2">
+        <div class="seek-wrapper" id="seek-wrapper">
+            <div class="seek-bg-layer" id="seek-bg"></div>
+            <input type="range" id="main-seek" min="0" max="100" value="0" step="0.1">
+            <div class="marker" id="marker-a">A</div>
+            <div class="marker" id="marker-b">B</div>
+        </div>
+    </section>
+
+    <section class="container-3">
+        <button class="main-btn btn-small" id="btn-set-a"><span class="btn-icon-s">A</span></button>
+        <button class="main-btn btn-large" id="btn-back-to-a"><span class="btn-icon"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></span></button>
+        <button class="main-btn btn-large" id="btn-play"><span class="btn-icon" id="play-icon"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button>
+        <button class="main-btn btn-small" id="btn-set-b"><span class="btn-icon-s">B</span></button>
+    </section>
+
+    <section class="container-tempo">
+        <div class="tempo-controls">
+            <button class="main-btn btn-tempo" id="tempo-minus">－</button>
+            <button class="main-btn btn-tempo" id="tempo-reset">RESET</button>
+            <button class="main-btn btn-tempo" id="tempo-plus">＋</button>
+        </div>
+        <div class="tempo-slider-wrapper">
+            <div class="tempo-bg-layer"></div>
+            <input type="range" id="tempo-slider" min="50" max="150" step="1" value="100">
+        </div>
+        <div class="tempo-labels">
+            <span class="label-l">-50%</span> <span class="label-c">0%</span> <span class="label-r">+50%</span>
+        </div>
+    </section>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+    const audio = document.getElementById('audio');
+    const seek = document.getElementById('main-seek');
+    const seekBg = document.getElementById('seek-bg');
+    const markerA = document.getElementById('marker-a');
+    const markerB = document.getElementById('marker-b');
+    const tempoSlider = document.getElementById('tempo-slider');
+    const playIcon = document.getElementById('play-icon');
+    const fileInput = document.getElementById('file-input');
+    const btnSelect = document.getElementById('btn-select-file');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const tapToStart = document.getElementById('tap-to-start');
+    
+    const ICON_PLAY = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+    const ICON_PAUSE = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M6.5 19h4V5h-4v14zm9 0h4V5h-4v14z"/></svg>';
+
+    let posA = 0; let posB = 100;
+    let isDragging = false;
+    let isFileOpening = false; 
+
+    function startSequence() {
+        loadingOverlay.style.display = 'none';
+        audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }).catch(err => { console.log("Play failed:", err); });
+    }
+
+    tapToStart.onclick = (e) => { e.stopPropagation(); startSequence(); };
+    btnSelect.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isFileOpening) return;
+        isFileOpening = true;
+        audio.load();
+        fileInput.click();
+        setTimeout(() => { isFileOpening = false; }, 1000); 
+    });
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) { isFileOpening = false; return; }
+        loadingOverlay.style.display = 'flex';
+        loadingSpinner.style.display = 'block';
+        tapToStart.style.display = 'none';
+        audio.pause();
+        const fileUrl = URL.createObjectURL(file);
+        audio.src = fileUrl;
+        posA = 0; posB = 100;
+        audio.currentTime = 0; 
+        seek.value = 0;
+        let forcedReady = setTimeout(() => { showReadyUI(); }, 500);
+        function showReadyUI() {
+            clearTimeout(forcedReady);
+            loadingSpinner.style.display = 'none';
+            tapToStart.style.display = 'block';
+            setTimeout(() => {
+                window.jsmediatags.read(file, {
+                    onSuccess: (tag) => {
+                        const t = tag.tags;
+                        document.getElementById('title-text').innerText = t.title || file.name;
+                        document.getElementById('artist-text').innerText = t.artist || "UNKNOWN ARTIST";
+                        if (t.picture) {
+                            let base = "";
+                            for (let i = 0; i < t.picture.data.length; i++) base += String.fromCharCode(t.picture.data[i]);
+                            document.getElementById('jacket-img').src = "data:" + t.picture.format + ";base64," + window.btoa(base);
+                            document.getElementById('jacket-img').style.display = 'block';
+                        } else { document.getElementById('jacket-img').style.display = 'none'; }
+                        setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100);
+                    },
+                    onError: () => {
+                        document.getElementById('title-text').innerText = file.name;
+                        document.getElementById('artist-text').innerText = "UNKNOWN ARTIST";
+                        setTimeout(() => { checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); }, 100);
+                    }
+                });
+            }, 300);
+        }
+        audio.onloadeddata = () => { showReadyUI(); audio.onloadeddata = null; };
+        updateTempo(100);
+        isFileOpening = false;
+    };
+
+    function checkMarquee(innerId, boxId) {
+        const inner = document.getElementById(innerId);
+        const box = document.getElementById(boxId);
+        if (!inner || !box) return;
+        inner.classList.remove('scrolling-content');
+        const oldClone = inner.querySelector('.marquee-clone');
+        if (oldClone) inner.removeChild(oldClone);
+        if (inner.scrollWidth > box.clientWidth + 2) {
+            const span = inner.querySelector('span');
+            const clone = span.cloneNode(true);
+            clone.classList.add('marquee-clone');
+            inner.appendChild(clone);
+            inner.classList.add('scrolling-content');
+        }
+    }
+
+    function updateSeekStyle() {
+        const wrapper = document.getElementById('seek-wrapper');
+        const rectWidth = wrapper.clientWidth;
+        const usableWidth = rectWidth;
+        
+        const xA = (posA / 100) * usableWidth;
+        const xB = (posB / 100) * usableWidth;
+        
+        markerA.style.left = `${xA}px`;
+        markerB.style.left = `${xB}px`;
+
+        seekBg.style.left = `${xA}px `;
+        seekBg.style.width = `${xB - xA}px`;
+
+        if (audio.duration) {
+            document.getElementById('ab-range-text').innerText = `${formatTime((posA/100)*audio.duration)}▶${formatTime((posB/100)*audio.duration)}`;
+        }
+    }
+
+    function formatTime(s) {
+        if (isNaN(s)) return "00:00";
+        const m = Math.floor(s / 60); const scale = Math.floor(s % 60);
+        return `${m.toString().padStart(2, '0')}:${scale.toString().padStart(2, '0')}`;
+    }
+
+    function updateTempo(val) {
+        const newTempo = Math.max(50, Math.min(150, val));
+        tempoSlider.value = newTempo;
+        audio.playbackRate = newTempo / 100;
+    }
+
+    let tempoInterval;
+    function startTempoChange(delta) {
+        updateTempo(parseInt(tempoSlider.value) + delta);
+        tempoInterval = setInterval(() => updateTempo(parseInt(tempoSlider.value) + delta), 100);
+    }
+    function stopTempoChange() { clearInterval(tempoInterval); }
+
+    audio.onloadedmetadata = () => { 
+        updateSeekStyle();
+        checkMarquee('title-inner', 'title-box');
+        checkMarquee('artist-inner', 'artist-box');
+    };
+
+    document.getElementById('tempo-minus').addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(-1); });
+    document.getElementById('tempo-plus').addEventListener('touchstart', (e) => { e.preventDefault(); startTempoChange(1); });
+    window.addEventListener('touchend', stopTempoChange);
+    document.getElementById('tempo-reset').onclick = () => updateTempo(100);
+    tempoSlider.oninput = (e) => audio.playbackRate = e.target.value / 100;
+
+    document.getElementById('btn-play').onclick = () => {
+        if (audio.paused) { audio.play().then(() => { playIcon.innerHTML = ICON_PAUSE; }); } 
+        else { audio.pause(); playIcon.innerHTML = ICON_PLAY; }
+    };
+
+    audio.ontimeupdate = () => {
+        if (!audio.duration || isDragging) return;
+        const currentP = (audio.currentTime / audio.duration) * 100;
+        if (currentP < posA || currentP >= posB) { audio.currentTime = ((posA / 100) * audio.duration); }
+        let seekVal = (audio.currentTime / audio.duration) * 100;
+        if (seekVal < posA) seekVal = posA;
+        if (seekVal > posB) seekVal = posB;
+        seek.value = seekVal;
+        document.getElementById('time-display').innerText = `${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`;
+        updateSeekStyle();
+    };
+
+    seek.oninput = (e) => { 
+        isDragging = true;
+        let val = parseFloat(e.target.value);
+        if (val < posA) val = posA;
+        if (val > posB) val = posB;
+        e.target.value = val;
+        audio.currentTime = (val / 100) * audio.duration; 
+        updateSeekStyle(); 
+    };
+    seek.onchange = () => { isDragging = false; };
+
+    document.getElementById('btn-set-a').onclick = () => { posA = (audio.currentTime / audio.duration) * 100; updateSeekStyle(); };
+    document.getElementById('btn-set-b').onclick = () => { posB = (audio.currentTime / audio.duration) * 100; updateSeekStyle(); };
+    
+    document.getElementById('btn-back-to-a').onclick = () => { 
+        if (!audio.duration) return;
+        audio.currentTime = ((posA / 100) * audio.duration);
+        seek.value = posA;
+        updateSeekStyle();
+    };
+
+    function setupDraggable(el, isA) {
+        let dragging = false;
+        const move = (e) => {
+            if (!dragging) return;
+            isDragging = true;
+            const rect = seek.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX);
+            let val = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
+            if (isA) { posA = Math.min(val, posB - 0.5); } 
+            else { posB = Math.max(val, posA + 0.5); }
+            updateSeekStyle();
+        };
+        const stop = () => { if (dragging) { dragging = false; setTimeout(() => { isDragging = false; }, 200); } };
+        el.addEventListener('mousedown', () => dragging = true);
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); dragging = true; }, {passive: false});
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move, { passive: false });
+        window.addEventListener('mouseup', stop);
+        window.addEventListener('touchend', stop);
+    }
+
+    setupDraggable(markerA, true); 
+    setupDraggable(markerB, false);
+    
+    window.onload = () => { updateSeekStyle(); checkMarquee('title-inner', 'title-box'); checkMarquee('artist-inner', 'artist-box'); };
+</script>
+</body>
+</html>
